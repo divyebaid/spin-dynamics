@@ -12,6 +12,7 @@ import scipy.sparse.linalg
 from scipy.integrate import solve_ivp
 from Heisenberg_model import time_evol, generate_base_states
 from Hubbard_utils import *
+from utils import *
 
 # Utility
 spins = ['u', 'd']  # spins up and down
@@ -20,82 +21,6 @@ four_hubbard_states = get_four_hubbard_states()
 four_hubbard_states_arrows = get_four_hubbard_states_arrows()
 rearr_Sz_subspace = get_rearr_Sz_subspace()
 four_T_S_states_arrows = get_four_T_S_states_arrows()
-
-
-def create_bit_strings(N):
-    # create all N-bit binary strings
-
-    ret_arr = list(itertools.product([0,1], repeat=N))
-    ret_arr = np.array([list(arr) for arr in ret_arr])
-
-    return ret_arr
-
-
-def creation(state, i, spin):
-    # creation operator acting on spin of site i (0-indexed) of state
-
-    idx = 2 * i if spin == 'u' else 2*i + 1
-    S_i = np.abs(np.sum(state[0:idx]))
-    sign_factor = (-1) ** S_i
-
-    if not state.any():
-        return np.zeros(len(state))
-    elif np.abs(state[idx]) == 1:
-        return np.zeros(len(state))
-    else:
-        ret_state = sign_factor * state
-        ret_state[idx] = 1
-        return ret_state
-    
-
-def annihilation(state, i, spin):
-    # annihilation operator acting on spin of site i (0-indexed) of state
-
-    idx = 2 * i if spin == 'u' else 2*i + 1
-    S_i = np.abs(np.sum(state[0:idx]))
-    sign_factor = (-1) ** S_i
-    if not state.any():
-        return np.zeros(len(state))
-    elif state[idx] == 0:
-        return np.zeros(len(state))
-    else:
-        ret_state = sign_factor * state
-        ret_state[idx] = 0
-        return ret_state
-    
-
-def number_operator(state, i, spin):
-    # number operator acting on spin of site i (0-indexed) of state
-    # returns 0 or 1
-
-    number_state = creation(annihilation(state, i, spin), i, spin)
-    if state.any():
-        if (number_state == state).all():
-            return 1
-        elif not number_state.any():
-            return 0
-        else:
-            return 'error in number operator'
-    else:
-        return 'error: passing empty state to number operator'
-    
-
-def time_evol_state(H, T, u):
-    # returns an array of statevectors corresponding to the time evolution of u under H
-
-    ret_component = np.array([(time_evol(H, t) @ u) for t in T])
-
-    return ret_component
-
-
-def prob_of_state(left_state, right_states):
-    # returns an array corresponding to |<left_state|right_state>|^2 over time
-    # assumes right_states is an array of statevectors over time
-
-    ret_component = np.array([(np.dot(left_state, right_state)) for right_state in right_states])
-    ret_component = np.square(np.absolute(ret_component))
-
-    return ret_component
 
 
 def state_inner_prod(state_one, state_two):

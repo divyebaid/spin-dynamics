@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy
 import scipy.linalg
+from utils import *
 
 # Constants
 # hbar = 1.05457E-34
@@ -54,14 +55,6 @@ def time_evol_state(H, T, u):
 
     return ret_component
 
-
-def prob_of_state(left_state, right_states):
-    # returns an array corresponding to |<left_state|right_state>|^2 over time
-
-    ret_component = np.array([(np.dot(left_state, right_state)) for right_state in right_states])
-    ret_component = np.square(np.absolute(ret_component))
-
-    return ret_component
 
 
 def get_spin_operators_mat(N):
@@ -153,7 +146,7 @@ def general_heisenberg_hamiltonian(N, J, B):
 if __name__ == '__main__':
     # Plotting spin chain probabilities (basic model)
     hbar = 1 
-    J = np.array([
+    J = 0.4*np.array([
         [0.00, 1.00, 0.00, 0.00],
         [0.00, 0.00, 1.00, 0.00],
         [0.00, 0.00, 0.00, 1.00],
@@ -161,7 +154,7 @@ if __name__ == '__main__':
     ])
     B = np.array([0, 0, 0])
     num_e = 4  # number of spin sites being simulated
-    T = np.linspace(0, 1000, 10000)
+    T = np.linspace(0, 500, 10000)
     H = general_heisenberg_hamiltonian(num_e, J, B)
     u = np.array([0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
     plt.figure(figsize=(120, 6))
@@ -177,3 +170,4 @@ if __name__ == '__main__':
     plt.legend(loc='best')
     plt.xlabel('Time')
     plt.ylabel('Probability')
+    plt.show()

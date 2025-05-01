@@ -2,8 +2,9 @@ import numpy as np
 import itertools
 
 def get_two_hubbard_states():
+    # occupations [n_{1↑}, n_{1↓}, n_{2↑}, n_{2↓}]
     two_hubbard_states = np.array([
-        [1,0,1,0],
+        [1,0,1,0], # 1 spin up site 1 & 1 spin up site 2
         [1,0,0,1],
         [0,1,1,0],
         [0,1,0,1],
