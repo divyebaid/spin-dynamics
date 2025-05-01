@@ -671,7 +671,6 @@ def symbolic_hubbard_hamiltonian():
     return symbolic_hubbard
     
 
-
 def Sz_separation():
     # Returns sympy.Matrix symbolic 4-site Hubbard Hamiltonian (in 44 dimensional Hilbert subspace)
     # Arrangement in the order of Sz = 0, +-1, +-2 (i.e. block diagonalised), mapping in Hubbard_utils.py

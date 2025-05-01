@@ -5,6 +5,7 @@
 import numpy as np
 import numpy as np
 import itertools
+import scipy.linalg
 
 # Functions
 
@@ -73,19 +74,6 @@ def number_operator(state, i, spin):
     i: int, site wanted
     spin: char, "u" or "d"
     """
-    
-    
-    #number_state = creation(annihilation(state, i, spin), i, spin)
-    #if state.any():
-    #    if (np.abs(number_state) == state).all():
-    #        return 1
-    #    elif not number_state.any():
-    #        return 0
-    #    else:
-    #        return 'error in number operator'
-    #else:
-    #    return 'error: passing empty state to number operator'
-    
 
     idx = 2 * i if spin == 'u' else 2 * i + 1
     return int(state[idx])
@@ -98,16 +86,12 @@ def time_evol_state(H, T, u):
     H: array, hamiltonien of the system
     T: array, times of the system, often a np.linspace
     u: array, state considered
-
     """
 
-
-    ret_component = np.array([(time_evol(H, t) @ u) for t in T])
-
-    return ret_component
+    return np.array([(time_evol(H, t) @ u) for t in T])
 
 
-def prob_of_state(left_state, right_states):
+def transition_probability_over_time(left_state, right_states):
     """
     This function returns an array corresponding to |<left_state|right_state>|^2 over time. It assumes right_states is an array of the T statevectors over time
 
@@ -118,8 +102,43 @@ def prob_of_state(left_state, right_states):
     """
     
     
-    ret_component = np.array([(np.dot(left_state, right_state)) for right_state in right_states])
+    ret_component = np.array([(np.vdot(left_state, right_state)) for right_state in right_states])
     ret_component = np.square(np.absolute(ret_component))
 
     return ret_component
 
+
+def generate_base_states(N):
+    """
+    Generates the simple basis states of length N (e.g. [1,0], [0,1]) for a system of N sites
+
+    N: int, number of sites
+    Returns: array, array of the simple basis states
+    """
+
+    return np.eye(N)
+
+
+def time_evol(H, t, hbar=1):
+    """
+    This function returns the time evolution operator U for a given Hamiltonian H and time t. U = exp(-iHt/hbar)
+
+    H: array, hamiltonian of the system
+    t: float, time of the system
+    returns: array, time evolution operator
+    """
+
+    return scipy.linalg.expm(-1j * H * t / hbar)
+
+
+def prob_over_time(H, T, u, v, transpose = True):
+    # returns probability over time T, Hamiltonian H, initial state u, observed state v i.e. <v| exp(-iHt/hbar) |u>
+    # set transpose = True if giving u as a row vector
+
+    if transpose: 
+        u = np.atleast_2d(u).T
+
+    ret_component = np.array([(v @ time_evol(H, t) @ u)[0] for t in T])
+    ret_component = np.square(np.absolute(ret_component))
+
+    return ret_component

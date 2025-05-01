@@ -15,48 +15,6 @@ s_all = [s_x, s_y, s_z]
 I = np.identity(2)
 
 
-def generate_base_states(N):
-    # returns the simple basis statevectors of length N (e.g. [1,0], [0,1]) 
-
-    ret_states = np.empty(N, dtype=object)
-    for n in range(N):
-        add_state = np.zeros(N)
-        add_state[n] = 1
-        ret_states[n] = add_state
-
-    return ret_states
-
-
-def time_evol(H, t):
-    # returns time evolution operator = exp(-i * H * t / hbar)
-    hbar = 1
-    ret_H = scipy.linalg.expm(-1j * H * t / hbar)
-
-    return ret_H
-
-
-def prob_over_time(H, T, u, v, transpose = True):
-    # returns probability over time T, Hamiltonian H, initial state u, observed state v i.e. <v| exp(-iHt/hbar) |u>
-    # set transpose = True if giving u as a row vector
-
-    if transpose: 
-        u = np.atleast_2d(u).T
-
-    ret_component = np.array([(v @ time_evol(H, t) @ u)[0] for t in T])
-    ret_component = np.square(np.absolute(ret_component))
-
-    return ret_component
-
-
-def time_evol_state(H, T, u):
-    # returns an array of statevectors corresponding to the time evolution of u under H
-
-    ret_component = np.array([(time_evol(H, t) @ u) for t in T])
-
-    return ret_component
-
-
-
 def get_spin_operators_mat(N):
     # generates the set of spin operators for the Heisenberg spin chain model
     # returns a list l where l[i][a] = S_(i, a) for the a-th Pauli matrix for the i-th spin site
@@ -161,7 +119,7 @@ if __name__ == '__main__':
     time_state = time_evol_state(H, T, u)
     for n in range(2 ** num_e):
         v = generate_base_states(2 ** num_e)[n]
-        res = prob_of_state(v, time_state)
+        res = transition_probability_over_time(v, time_state)
         if res.any():
             bin_rep = format(n, f'0{num_e}b')
             spins_string = bin_rep.replace('0', '↑').replace('1', '↓')
