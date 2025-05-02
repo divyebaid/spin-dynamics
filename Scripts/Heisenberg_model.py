@@ -110,10 +110,12 @@ if __name__ == '__main__':
         [0.00, 0.00, 0.00, 1.00],
         [0.00, 0.00, 0.00, 0.00]
     ])
+
     B = np.array([0, 0, 0])
     num_e = 4  # number of spin sites being simulated
     T = np.linspace(0, 500, 10000)
     H = general_heisenberg_hamiltonian(num_e, J, B)
+    
     u = np.array([0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
     plt.figure(figsize=(120, 6))
     time_state = time_evol_state(H, T, u)
