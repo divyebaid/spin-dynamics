@@ -22,6 +22,7 @@ four_hubbard_states_arrows = get_four_hubbard_states_arrows()
 rearr_Sz_subspace = get_rearr_Sz_subspace()
 four_T_S_states_arrows = get_four_T_S_states_arrows()
 
+#%% Hamiltonian creation, useless in new code
 
 def create_two_hubbard_hamiltonian(t, U):
     two_hubbard = np.zeros((16,16))
@@ -52,6 +53,7 @@ def create_four_hubbard_hamiltonian_half_occ(t, U):
 
     return four_hubbard
 
+#%%
 
 def computational_to_t_s_basis_change():
     # Returns a matrix converting the 4QD basis (of size 256) from computational to ((down, down), (S), (T_0), (up, up)) tensor product itself

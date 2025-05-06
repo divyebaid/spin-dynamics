@@ -30,6 +30,13 @@
 
 - created a function `hubbard_hamiltonian_matrix` to create the hamiltonian matrix once. Might take more time at the beggining to calculate but it should be faster after. (70x70 matrix for 4 sites, **only 1 sec to compute**). They both work with same matrix form but different values. Currently investigating it.
 
+
+<p float="left">
+  <img src="image/hamiltonien%20computed.png" width="400" />
+  <img src="image/hamiltonien%20theorique.png" width="250" /> 
+</p>
+
+
 ## Improvements (not sure):
 
 
@@ -41,4 +48,3 @@
 ## Thoughts:
 
 - Is the np.abs useful in the creation and annhilation function ?
-

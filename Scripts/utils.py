@@ -11,6 +11,13 @@ import numpy as np
 import itertools
 import scipy.linalg
 
+
+# Constants
+
+spins = ['u', 'd']  # spins up and down
+
+
+
 # Functions
 
 def create_bit_strings(N):
@@ -93,7 +100,6 @@ def time_evol_state(H, T, u, hbar=1):
     hbar: float, reduced Planck constant (default = 1)
     returns: array, array of statevectors over time
     """
-
     return np.array([(time_evol_operator(H, t, hbar) @ u) for t in T])
 
 
@@ -133,7 +139,6 @@ def time_evol_operator(H, t, hbar=1):
     t: float, time of the system
     returns: array, time evolution operator
     """
-
     return scipy.linalg.expm(-1j * H * t / hbar)
 
 
@@ -175,10 +180,13 @@ def hopping_term_sign_factor(state, i, k, spin):
     idx_i = 2 * i if spin == 'u' else 2*i + 1
     idx_k = 2 * k if spin == 'u' else 2*k + 1
 
-    S_i = np.abs(np.sum(annihilation(state, k, spin)[0:idx_i]))
-    S_k = np.abs(np.sum(state[0:idx_k]))
+    min_idx = min(idx_i, idx_k)
+    max_idx = max(idx_i, idx_k)
 
-    return (-1) ** (S_i + S_k)
+    S = np.sum(state[min_idx+1:max_idx])
+
+
+    return (-1) ** (S)
 
 
 def get_hubbard_states(N):
@@ -201,7 +209,7 @@ def get_hubbard_states(N):
     return np.array(all_states)
 
 
-def hubbard_hamiltonian_matrix(N, t, U):
+def hubbard_hamiltonian_matrix(N, t, U, states = None):
     """
     Returns the Hubbard Hamiltonian matrix for a system of N sites.
     
@@ -212,8 +220,11 @@ def hubbard_hamiltonian_matrix(N, t, U):
     returns: array, Hubbard Hamiltonian matrix in the basis of all possible states
 
     """
-    states = get_hubbard_states(N)  # Get all possible Hubbard states
-    dim = len(states)  # Dimension of the Hilbert space
+    if states is None:
+        states = get_hubbard_states(N)  # Get all possible Hubbard states
+        dim = len(states)  # Dimension of the Hilbert space
+    else:
+        dim = len(states)
     H = np.zeros((dim, dim))
     
     # Loop over all states (rows)
@@ -236,25 +247,52 @@ def hubbard_hamiltonian_matrix(N, t, U):
             else:
                 # Determine if states i and j differ by a single hopping event
                 for site1 in range(N):
-                    for site2 in range(N):
-                        if site1 != site2:
-                            for spin in ['u', 'd']:
-                                # Check if state_j can be obtained from state_i by hopping
-                                # Apply annihilation followed by creation to attempt a hopping
-                                temp_state = annihilation(state_i, site1, spin)
-                                
-                                # Only proceed if annihilation and creation are both successful
-                                if np.any(temp_state):
-                                    final_state = creation(temp_state, site2, spin)
-                                    
-                                    if np.any(final_state) and np.array_equal(np.abs(final_state), state_j):
-                                        # Use the dedicated function to calculate the sign factor
+                    # Hubbard nearest-neighbor hopping
+                    for site2 in (site1-1, site1+1):
+                        if 0 <= site2 < N:
+                            for spin in ['u','d']:
+                                temp = annihilation(state_i, site1, spin)
+                                # Check if there is a spin to move at site1 with spin
+                                if np.any(temp):
+                                    final = creation(temp, site2, spin) # 0 if already occupied
+                                   
+                                    if np.array_equal(np.abs(final), state_j):
                                         sign = hopping_term_sign_factor(state_i, site1, site2, spin)
-                                        # Add the hopping term
-                                        H[i, j] -= t[site1][site2] * sign
+                                        H[i, j] -= t[site1,site2] * sign
     
     return H
 
+
+def get_spin_operators_mat(N):
+    # generates the set of spin operators for the Heisenberg spin chain model
+    # returns a list l where l[i][a] = S_(i, a) for the a-th Pauli matrix for the i-th spin site
+
+    identity_matrices = [np.identity(2**n) for n in range(N)]
+
+    spin_operators_mat = []
+    for n in range(N):
+        spin_n = np.empty(3, dtype=object)
+        left_identity = identity_matrices[n]
+        right_identity = identity_matrices[N - n - 1]
+        for m in range(3):
+            s = s_all[m]
+            if n == 0:
+                s_n = np.kron(s, right_identity)
+            elif n == N - 1:
+                s_n = np.kron(left_identity, s)
+            else:
+                s_n = np.kron(np.kron(left_identity, s), right_identity)
+            spin_n[m] = s_n
+        spin_operators_mat.append(0.5 * spin_n)
+
+    return spin_operators_mat
+
+
+
+
+
+
+# Old functions to investigate
 
 def hubbard_hamiltonian(state, t, U, prod_state):
     # retrns array [statevector of H_Hubbard * state, <prod_state| H_Hubbard |state>]
@@ -329,6 +367,7 @@ def hubbard_hamiltonian_bis(state, t, U, prod_state):
         return [state, 0]
 
 def state_inner_prod(state_one, state_two):
+
     # inner product operation on states (assuming orthonormal states)
     # this function is used only for <state_one| operator |state_two> thus returning (state_two / state_one) 
 
@@ -346,3 +385,52 @@ def state_inner_prod(state_one, state_two):
         ret_val = 0
 
     return ret_val
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Paramètres
+N = 4
+U = 4
+t_matrix = np.zeros((N, N))
+for i in range(N-1):
+    t_matrix[i, i+1] = 1
+    t_matrix[i+1, i] = 1
+T = np.linspace(0, 100, 1000)
+
+# Hamiltonien
+H = hubbard_hamiltonian_matrix(N, t_matrix, U)
+
+# Base d’états Hubbard (dimension 6)
+states = get_hubbard_states(N)
+
+# Choisis un état initial (par exemple |↑↓, 0>)
+# Ici, états binaires: [↑₀, ↑₁, ↓₀, ↓₁]
+u = np.array([0,1,1,0,1, 0, 1, 0])  
+
+# On trouve l'indice correspondant dans la base complète
+u_index = np.where(np.all(states == u, axis=1))[0][0]
+
+# État initial comme vecteur de base complet
+u_vector = np.zeros(len(states))
+u_vector[u_index] = 1.0
+
+# Évolution temporelle
+time_state = time_evol_state(H, T, u_vector)
+
+# Plotting
+plt.figure(figsize=(12, 6))
+for n, v in enumerate(states):
+    v_label = f"|{''.join(['↑' if v[i] else '' for i in range(N)])}{''.join(['↓' if v[i+N] else '' for i in range(N)])}>"
+    v_vector = np.zeros(len(states))
+    v_vector[n] = 1.0
+    res = transition_probability_over_time(v_vector, time_state)
+    if np.any(res > 1e-6):
+        plt.plot(T, res, label=v_label)
+
+plt.legend(loc='best')
+plt.xlabel('Temps')
+plt.ylabel('Probabilité')
+plt.title("Probabilités d'occupation des états Hubbard (N=2, U=13)")
+plt.show()
