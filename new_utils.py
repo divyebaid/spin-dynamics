@@ -258,7 +258,7 @@ dot_positions = generate_dot_positions_from_barrier_widths(
 
 # Generate a potential pulse at a given time
 U_imp = pulse_U(time_array, t_start=2e-13, delta_t=1e-13, delta_U=65)
-pot = potential_over_time(time_array, U_imp, x_vals,
+pot = potential_over_time(U_imp, x_vals,
     dot_positions,
     well_depth=30,
     well_width=10,
